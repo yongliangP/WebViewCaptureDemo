@@ -2,7 +2,7 @@
 //  AppDelegate.m
 //  WebViewCaptureDemo
 //
-//  Created by 彭永亮 on 16/9/6.
+//  Created by yongliangP on 16/9/6.
 //  Copyright © 2016年 yongliangP. All rights reserved.
 //
 
@@ -15,7 +15,8 @@
 @implementation AppDelegate
 
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
     // Override point for customization after application launch.
     return YES;
 }
