@@ -8,6 +8,10 @@
 
 #import "ViewController.h"
 #import <WebKit/WebKit.h>
+#import "MBProgressHUD.h"
+#import "Util.h"
+#define KCapUrl @"http://api.haohaozhu.cn/index.php/Home/Guide/guide_detail?id=00000a702000097p"
+
 @interface ViewController ()<UIWebViewDelegate,WKNavigationDelegate>
 
 @end
@@ -18,7 +22,7 @@
 {
     [super viewDidLoad];
     
-    NSString * url = @"http://www.jianshu.com";
+    NSString * url = KCapUrl;
     
     WKWebView * wkWebView = [[WKWebView alloc] initWithFrame:self.view.bounds];
     
@@ -29,66 +33,70 @@
     
     [self.view addSubview:wkWebView];
     
-    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"截图分享" style:UIBarButtonItemStylePlain target:self action:@selector(captureView:)];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"截图" style:UIBarButtonItemStylePlain target:self action:@selector(captureView:)];
+    
+     [MBProgressHUD showHUDAddedTo:[UIApplication sharedApplication].keyWindow animated:YES];
+    
+}
+
+
+- (void)webView:(WKWebView *)webView didFinishNavigation:(null_unspecified WKNavigation *)navigation
+{
+     [MBProgressHUD hideHUDForView:[UIApplication sharedApplication].keyWindow animated:YES];
 }
 
 
 -(void)captureView:(UIBarButtonItem*)item
 {
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:window animated:YES];
+    hud.animationType  = MBProgressHUDAnimationZoom;
+    hud.mode              = MBProgressHUDModeText;
+    hud.detailsLabel.text = @"正在生成截图";
+    hud.detailsLabel.font = [UIFont systemFontOfSize:17.0];
     
-    NSString * url = @"http://www.jianshu.com";
+    [[Util shareUtil] capturePicShareWitchUrl:KCapUrl success:^(UIImage *image, UIImage *thumbImage) {
+    [MBProgressHUD hideHUDForView:[UIApplication sharedApplication].keyWindow animated:YES];
+
+        UIAlertController * alertVC = [UIAlertController alertControllerWithTitle:@"温馨提示" message:@"截图成功，是否保存到相册" preferredStyle:UIAlertControllerStyleAlert];
+        
+        UIAlertAction * action1 = [UIAlertAction actionWithTitle:@"是" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action)
+        {
+            [self saveImageToPhotos: image];
+            [self showPromptWithText:@"保存到相册成功" hideAfterdelay:1.5];
+        }];
+        
+        UIAlertAction * action2 = [UIAlertAction actionWithTitle:@"否" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            
+        }];
+        
+        [alertVC addAction:action1];
+        [alertVC addAction:action2];
+        
+        [self presentViewController:alertVC animated:YES completion:nil];
+        
+    } failure:^(NSError *error) {
+        
+    }];
     
-    UIWebView * webView = [[UIWebView alloc] initWithFrame:self.view.bounds];
-    webView.delegate = self;
-    
-    webView.hidden = YES;
-    
-    NSMutableURLRequest *re2 = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
-    [webView loadRequest:re2];
-    
-    [self.view addSubview:webView];
     
 }
 
 
-#pragma UIWebViewDelegate
-
--(void)webViewDidFinishLoad:(UIWebView *)webView
+- (MBProgressHUD *)showPromptWithText:(NSString *)text hideAfterdelay:(CGFloat)timeInterval
 {
-    [self saveImageToPhotos: [self screenShotWithScrollView:webView.scrollView]];
-    
-     webView.delegate = nil;
-    
-    [webView removeFromSuperview];
-    
-     webView = nil;
-    
-}
-
-
-#pragma mark - 保存图片
-- (UIImage *)screenShotWithScrollView:(UIScrollView *)scrollView
-{
-    UIImage* image;
-
-    UIGraphicsBeginImageContextWithOptions(scrollView.contentSize, NO, [UIScreen mainScreen].scale);
-    {
-        CGPoint savedContentOffset = scrollView.contentOffset;
-        CGRect savedFrame = scrollView.frame;
-        scrollView.contentOffset = CGPointZero;
-        scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
-        [scrollView.layer renderInContext: UIGraphicsGetCurrentContext()];
-        image = UIGraphicsGetImageFromCurrentImageContext();
-        scrollView.contentOffset = savedContentOffset;
-        scrollView.frame = savedFrame;
-    }
-    UIGraphicsEndImageContext();
-    
-    if (image != nil)
-    {
-        return image;
-    }
-    return nil;
+    UIWindow *window = [UIApplication sharedApplication].keyWindow;
+  
+    MBProgressHUD *hud = [MBProgressHUD showHUDAddedTo:window animated:YES];
+    hud.animationType  = MBProgressHUDAnimationZoom;
+    hud.mode              = MBProgressHUDModeText;
+    hud.detailsLabel.text = text;
+    hud.detailsLabel.font = [UIFont systemFontOfSize:17.0];
+    hud.removeFromSuperViewOnHide = YES;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(timeInterval * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [hud hideAnimated:YES];
+    });
+    return hud;
 }
 
 
@@ -98,7 +106,6 @@
 {
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        
         UIImageWriteToSavedPhotosAlbum(savedImage, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
     });
     
@@ -119,7 +126,6 @@
     NSLog(@"%@",msg);
     
 }
-
 
 
 - (void)didReceiveMemoryWarning {
