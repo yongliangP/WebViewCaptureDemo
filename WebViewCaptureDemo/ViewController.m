@@ -63,6 +63,7 @@
         UIAlertAction * action1 = [UIAlertAction actionWithTitle:@"是" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action)
         {
             [self saveImageToPhotos: image];
+            [self saveImageToPhotos: thumbImage];
             [self showPromptWithText:@"保存到相册成功" hideAfterdelay:1.5];
         }];
         

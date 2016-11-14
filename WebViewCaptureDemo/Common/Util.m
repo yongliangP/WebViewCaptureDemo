@@ -57,8 +57,9 @@ static Util * util;
 #pragma UIWebViewDelegate
 -(void)webViewDidFinishLoad:(UIWebView *)webView
 {
-    UIImage * image = [self screenShotWithScrollView:webView.scrollView];
-    UIImage * thumbImage = [self screenThumbShotWithScrollView:webView.scrollView];
+    UIImage * image = [self screenShotWithScrollView:webView.scrollView withSize:CGSizeZero];
+    UIImage * thumbImage = [self screenShotWithScrollView:webView.scrollView withSize:CGSizeMake(kWindowWidth, kWindowHeight)];
+    
     if (_successBlock)
     {
         _successBlock(image,thumbImage);
@@ -80,16 +81,16 @@ static Util * util;
 
 
 //图片
-- (UIImage *)screenShotWithScrollView:(UIScrollView *)scrollView
+- (UIImage *)screenShotWithScrollView:(UIScrollView *)scrollView withSize:(CGSize)size
 {
     UIImage* image;
     
-    UIGraphicsBeginImageContextWithOptions(scrollView.contentSize, NO, [UIScreen mainScreen].scale);
+    UIGraphicsBeginImageContextWithOptions(size.width==0?scrollView.contentSize:size, NO, [UIScreen mainScreen].scale);
     {
         CGPoint savedContentOffset = scrollView.contentOffset;
         CGRect savedFrame = scrollView.frame;
         scrollView.contentOffset = CGPointZero;
-        scrollView.frame = CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height);
+        scrollView.frame = size.width==0? CGRectMake(0, 0, scrollView.contentSize.width, scrollView.contentSize.height):CGRectMake(0, 0, size.width, size.height);
         [scrollView.layer renderInContext: UIGraphicsGetCurrentContext()];
         image = UIGraphicsGetImageFromCurrentImageContext();
         scrollView.contentOffset = savedContentOffset;
@@ -105,31 +106,6 @@ static Util * util;
 }
 
 
-
-// 缩略图图片
-- (UIImage *)screenThumbShotWithScrollView:(UIScrollView *)scrollView
-{
-    UIImage* image;
-    
-    UIGraphicsBeginImageContextWithOptions(CGSizeMake(kWindowWidth, kWindowHeight), NO, [UIScreen mainScreen].scale);
-    {
-        CGPoint savedContentOffset = scrollView.contentOffset;
-        CGRect savedFrame = scrollView.frame;
-        scrollView.contentOffset = CGPointZero;
-        scrollView.frame = KeyWindow.bounds;
-        [scrollView.layer renderInContext: UIGraphicsGetCurrentContext()];
-        image = UIGraphicsGetImageFromCurrentImageContext();
-        scrollView.contentOffset = savedContentOffset;
-        scrollView.frame = savedFrame;
-    }
-    UIGraphicsEndImageContext();
-    
-    if (image != nil)
-    {
-        return image;
-    }
-    return nil;
-}
 
 
 @end
